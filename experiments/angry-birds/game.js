@@ -38,8 +38,8 @@ function init() {
   canvas.height = window.innerHeight;
   ctx = canvas.getContext('2d');
 
-  SLING_X = Math.round(canvas.width * 0.22);
-  SLING_Y = Math.round(canvas.height * 0.62);
+  SLING_X = Math.round(canvas.width * 0.18);
+  SLING_Y = Math.round(canvas.height - 40 - 85); // 85px above ground
 
   engine = Engine.create({ gravity: { y: GRAVITY } });
   runner = Runner.create();
@@ -49,6 +49,7 @@ function init() {
   setupInput();
   setupCollisions();
   setupRestartButton();
+  setupOrientationCheck();
 
   requestAnimationFrame(gameLoop);
 }
@@ -67,10 +68,9 @@ function reset() {
   gameOver   = false;
 
   document.getElementById('message-overlay').setAttribute('hidden', '');
-  document.getElementById('restart-btn').setAttribute('hidden', '');
 
-  SLING_X = Math.round(canvas.width * 0.22);
-  SLING_Y = Math.round(canvas.height * 0.62);
+  SLING_X = Math.round(canvas.width * 0.18);
+  SLING_Y = Math.round(canvas.height - 40 - 85);
 
   engine = Engine.create({ gravity: { y: GRAVITY } });
   runner = Runner.create();
@@ -93,8 +93,8 @@ function buildScene() {
   });
   World.add(engine.world, ground);
 
-  // Structure center x
-  const cx = Math.round(W * 0.68);
+  // Structure center x — designed for phone landscape (~844px wide)
+  const cx = Math.round(W * 0.72);
 
   // Wooden blocks — two pillar pairs + beams + top box
   const blockDefs = [
@@ -175,6 +175,7 @@ function launchBird() {
   Body.setStatic(activeBird, false);
   activeBird.collisionFilter = { category: 0x0001, mask: 0xFFFFFFFF, group: 0 };
   Body.setVelocity(activeBird, { x: vx, y: vy });
+  Body.setAngularVelocity(activeBird, 0.2);
 
   launched = true;
   isDragging = false;
@@ -328,7 +329,6 @@ function showMessage(title, sub) {
   document.getElementById('message-text').textContent = title;
   document.getElementById('message-sub').textContent = sub;
   document.getElementById('message-overlay').removeAttribute('hidden');
-  document.getElementById('restart-btn').removeAttribute('hidden');
 }
 
 // ── UI ────────────────────────────────────────────────────────────────────────
@@ -445,7 +445,7 @@ function drawBlocks() {
 
 function drawSlingshot() {
   const forkH = 28;
-  const trunkH = 55;
+  const trunkH = canvas.height - 40 - SLING_Y; // reach the ground
   const forkSpread = 18;
 
   ctx.strokeStyle = '#7a4a18';
@@ -577,107 +577,121 @@ function drawPigs() {
   });
 }
 
+// Draws a Mr. Hankey-style angry poop centered at origin, sized by r.
+// full=true → eyes + angry brows + frown; false → mini version (eyes only).
+function drawPoop(r, full) {
+  const brown     = '#8B4513';
+  const darkBrown = '#4a1f00';
+
+  // Stacked blobs: bottom → tip
+  [
+    { ox: 0,         oy: r * 0.22,  br: r * 0.72 },
+    { ox: r * 0.06,  oy: -r * 0.26, br: r * 0.52 },
+    { ox: r * 0.1,   oy: -r * 0.64, br: r * 0.33 },
+    { ox: r * 0.12,  oy: -r * 0.92, br: r * 0.17 },
+  ].forEach(({ ox, oy, br }) => {
+    ctx.beginPath();
+    ctx.arc(ox, oy, br, 0, Math.PI * 2);
+    ctx.fillStyle = brown;
+    ctx.fill();
+  });
+
+  // Shine on bottom blob
+  ctx.beginPath();
+  ctx.arc(-r * 0.3, r * 0.08, r * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(200,130,70,0.4)';
+  ctx.fill();
+
+  // Eyes sit on the middle blob (oy ≈ -r*0.26)
+  const eyeY = -r * 0.26;
+  const eyeX = r * 0.24;
+  [-eyeX, eyeX].forEach(ex => {
+    ctx.beginPath(); ctx.arc(ex, eyeY, r * 0.2, 0, Math.PI * 2);
+    ctx.fillStyle = 'white'; ctx.fill();
+    ctx.beginPath(); ctx.arc(ex + r * 0.04, eyeY + r * 0.04, r * 0.11, 0, Math.PI * 2);
+    ctx.fillStyle = '#111'; ctx.fill();
+  });
+
+  if (full) {
+    // Angry V-brows
+    ctx.strokeStyle = darkBrown;
+    ctx.lineWidth = r * 0.13;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-eyeX - r * 0.3, eyeY - r * 0.3); ctx.lineTo(-eyeX + r * 0.14, eyeY - r * 0.1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( eyeX + r * 0.3, eyeY - r * 0.3); ctx.lineTo( eyeX - r * 0.14, eyeY - r * 0.1); ctx.stroke();
+
+    // Frown
+    ctx.beginPath();
+    ctx.arc(r * 0.05, eyeY + r * 0.52, r * 0.22, 0.3, Math.PI - 0.3);
+    ctx.strokeStyle = darkBrown;
+    ctx.lineWidth = r * 0.11;
+    ctx.stroke();
+  }
+}
+
 function drawActiveBird() {
   if (!activeBird) return;
   const { x, y } = activeBird.position;
-  const r = BIRD_RADIUS;
-
   ctx.save();
   ctx.translate(x, y);
-
-  // Body
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
-  ctx.fillStyle = '#cc2222';
-  ctx.fill();
-  ctx.strokeStyle = '#8a1010';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Highlight
-  ctx.beginPath();
-  ctx.arc(-r * 0.3, -r * 0.35, r * 0.28, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,120,120,0.55)';
-  ctx.fill();
-
-  // Beak
-  ctx.beginPath();
-  ctx.moveTo(r * 0.55, -r * 0.05);
-  ctx.lineTo(r * 1.05, -r * 0.05);
-  ctx.lineTo(r * 0.55,  r * 0.3);
-  ctx.closePath();
-  ctx.fillStyle = '#e8a020';
-  ctx.fill();
-  ctx.strokeStyle = '#c07010';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // Eye
-  ctx.beginPath();
-  ctx.arc(-r * 0.12, -r * 0.22, r * 0.26, 0, Math.PI * 2);
-  ctx.fillStyle = 'white'; ctx.fill();
-  ctx.beginPath();
-  ctx.arc(-r * 0.06, -r * 0.18, r * 0.15, 0, Math.PI * 2);
-  ctx.fillStyle = '#111'; ctx.fill();
-
-  // Angry brow
-  ctx.strokeStyle = '#8a1010';
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(-r * 0.45, -r * 0.5);
-  ctx.lineTo( r * 0.22, -r * 0.38);
-  ctx.stroke();
-
-  // Head tufts
-  ctx.strokeStyle = '#aa1515';
-  ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(-r * 0.15, -r * 1.5); ctx.stroke();
-  ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(r * 0.1, -r); ctx.lineTo(r * 0.3, -r * 1.45); ctx.stroke();
-
+  ctx.rotate(activeBird.angle);
+  drawPoop(BIRD_RADIUS, true);
   ctx.restore();
 }
 
 function drawBirdQueue(H) {
   const groundY = H - 40;
   const startX  = SLING_X - 55;
-  const queueY  = groundY - BIRD_RADIUS;
+  const queueY  = groundY - BIRD_RADIUS * 0.8;
   const spacing = (BIRD_RADIUS * 2) + 6;
 
-  const waiting = birdQueue.slice(launched ? 0 : 1); // exclude bird currently on sling
+  const waiting = birdQueue.slice(launched ? 0 : 1);
 
   waiting.forEach((_, i) => {
-    const qx = startX - i * spacing;
-    const r  = BIRD_RADIUS * 0.72;
-
     ctx.save();
-    ctx.translate(qx, queueY);
-
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fillStyle = '#aa1818';
-    ctx.fill();
-    ctx.strokeStyle = '#6a0e0e';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Mini highlight
-    ctx.beginPath();
-    ctx.arc(-r * 0.28, -r * 0.32, r * 0.28, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(220,80,80,0.45)';
-    ctx.fill();
-
-    // Mini beak
-    ctx.fillStyle = '#e8a020';
-    ctx.beginPath();
-    ctx.moveTo(r * 0.52, -r * 0.05);
-    ctx.lineTo(r, -r * 0.05);
-    ctx.lineTo(r * 0.52, r * 0.28);
-    ctx.closePath();
-    ctx.fill();
-
+    ctx.translate(startX - i * spacing, queueY);
+    drawPoop(BIRD_RADIUS * 0.72, false);
     ctx.restore();
+  });
+}
+
+// ── Orientation ───────────────────────────────────────────────────────────────
+
+function checkOrientation() {
+  const portrait = window.innerHeight > window.innerWidth;
+  const overlay  = document.getElementById('rotate-overlay');
+  const wasShowing = !overlay.hidden;
+
+  if (portrait) {
+    overlay.removeAttribute('hidden');
+  } else {
+    overlay.setAttribute('hidden', '');
+    // Recalculate for new dimensions whenever we return to landscape
+    if (wasShowing) {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      reset();
+      updateStatusBar();
+    }
+  }
+}
+
+function setupOrientationCheck() {
+  checkOrientation();
+
+  window.addEventListener('resize', () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    checkOrientation();
+  });
+
+  // orientationchange fires before dimensions update — wait a frame
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      checkOrientation();
+    }, 100);
   });
 }
 

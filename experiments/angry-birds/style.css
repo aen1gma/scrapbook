@@ -32,8 +32,7 @@ body {
   z-index: 10;
 }
 
-.back-link,
-#restart-btn {
+.back-link {
   pointer-events: auto;
 }
 
@@ -68,22 +67,6 @@ body {
 #birds-left { color: #cc4444; }
 #pigs-left  { color: #4aaa28; }
 
-#restart-btn {
-  background: #e8a020;
-  border: none;
-  color: #0a0a14;
-  font-weight: 700;
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: background 0.15s;
-}
-
-#restart-btn:hover {
-  background: #f0b840;
-}
-
 #message-overlay {
   position: fixed;
   inset: 0;
@@ -96,6 +79,23 @@ body {
   z-index: 20;
   pointer-events: none;
 }
+
+#restart-btn {
+  pointer-events: auto;
+  margin-top: 0.5rem;
+  background: #e8a020;
+  border: none;
+  color: #0a0a14;
+  font-weight: 700;
+  padding: 0.6rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.15s, transform 0.1s;
+}
+
+#restart-btn:hover  { background: #f0b840; }
+#restart-btn:active { transform: scale(0.96); }
 
 #message-overlay:not([hidden]) {
   display: flex;
@@ -112,4 +112,40 @@ body {
 #message-sub {
   font-size: 1rem;
   color: rgba(232, 232, 240, 0.6);
+}
+
+#rotate-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: #0f0f13;
+  z-index: 100;
+}
+
+#rotate-overlay:not([hidden]) {
+  display: flex;
+}
+
+.rotate-phone {
+  width: 80px;
+  height: 80px;
+  animation: rotate-hint 2.5s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+  0%   { transform: rotate(0deg); }
+  40%  { transform: rotate(-90deg); }
+  65%  { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.rotate-text {
+  color: #e8e8f0;
+  font-size: 1.1rem;
+  text-align: center;
+  line-height: 1.6;
 }
