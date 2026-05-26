@@ -41,7 +41,6 @@ let nextBirdSpicy    = false;
 let activeBirdSpicy  = false;
 let spicyExploded    = false;
 let spicyExplosion   = null;  // { x, y, t } for radial animation
-let spicySettleFrames = 0;
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
@@ -86,7 +85,6 @@ function reset() {
   activeBirdSpicy  = false;
   spicyExploded    = false;
   spicyExplosion   = null;
-  spicySettleFrames = 0;
 
   document.getElementById('message-overlay').setAttribute('hidden', '');
 
@@ -164,7 +162,7 @@ function buildScene() {
   });
 
   // Chili power-up — sensor in the center of the tower
-  chili = Bodies.circle(cx, groundY - 82, 10, {
+  chili = Bodies.circle(cx, groundY - 82, 18, {
     isStatic: true, isSensor: true, label: 'chili',
   });
   World.add(engine.world, chili);
@@ -196,10 +194,9 @@ function buildScene() {
 function mountNextBird() {
   if (birdQueue.length === 0) return;
 
-  activeBirdSpicy  = nextBirdSpicy;
-  nextBirdSpicy    = false;
-  spicyExploded    = false;
-  spicySettleFrames = 0;
+  activeBirdSpicy = nextBirdSpicy;
+  nextBirdSpicy   = false;
+  spicyExploded   = false;
 
   activeBird = Bodies.circle(SLING_X, SLING_Y - 20, BIRD_RADIUS, {
     isStatic: true,
@@ -407,10 +404,11 @@ function triggerSpicyExplosion(x, y) {
       }
     }
   });
-  checkWinLose();
+  // caller is responsible for checkWinLose
 }
 
 function triggerWin() {
+  if (gameOver) return;
   gameOver = true;
   Runner.stop(runner);
   // birdQueue still holds any unthrown turds (launched ones have been shifted out)
@@ -428,6 +426,7 @@ function triggerWin() {
 }
 
 function triggerLose() {
+  if (gameOver) return;
   gameOver = true;
   Runner.stop(runner);
   document.getElementById('restart-btn').textContent = 'Play Again';
@@ -462,19 +461,6 @@ function gameLoop() {
   const H = canvas.height;
 
   ctx.clearRect(0, 0, W, H);
-
-  // Spicy bird stationarity — trigger explosion once it settles
-  if (activeBird && activeBirdSpicy && launched && !spicyExploded) {
-    const speed = Math.hypot(activeBird.velocity.x, activeBird.velocity.y);
-    if (speed < 0.8) {
-      spicySettleFrames++;
-      if (spicySettleFrames >= 20) {
-        triggerSpicyExplosion(activeBird.position.x, activeBird.position.y);
-      }
-    } else {
-      spicySettleFrames = 0;
-    }
-  }
 
   drawBackground(W, H);
   drawGround(W, H);
