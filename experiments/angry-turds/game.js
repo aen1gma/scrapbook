@@ -344,8 +344,7 @@ function triggerWin() {
   if (currentLevel < MAX_LEVEL) {
     btn.textContent = 'Next Level →';
     restartAction = () => { leftoverTurds = carryOver; currentLevel++; reset(); updateStatusBar(); };
-    const bonus = carryOver > 0 ? ` (+${carryOver} carried over)` : '';
-    showMessage(`Level ${currentLevel}`, `cleared!${bonus}`);
+    showMessage(`Level ${currentLevel}`, 'cleared!');
   } else {
     btn.textContent = 'Play Again';
     restartAction = () => { leftoverTurds = 0; currentLevel = 1; reset(); updateStatusBar(); };
