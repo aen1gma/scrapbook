@@ -334,7 +334,7 @@ function showMessage(title, sub) {
 // ── UI ────────────────────────────────────────────────────────────────────────
 
 function updateStatusBar() {
-  document.getElementById('birds-left').textContent = `Birds: ${birdQueue.length}`;
+  document.getElementById('birds-left').textContent = `Turds: ${birdQueue.length}`;
   document.getElementById('pigs-left').textContent  = `Pigs: ${pigs.filter(p => !p.dead).length}`;
 }
 
