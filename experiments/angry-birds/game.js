@@ -6,8 +6,8 @@ const BIRD_RADIUS    = 18;
 const PIG_RADIUS     = 20;
 const PIG_HEALTH     = 2;
 const MAX_PULL       = 110;
-const LAUNCH_SCALE   = 0.20;
-const TRAJ_STEPS     = 60;
+const LAUNCH_SCALE   = 0.12;
+const TRAJ_STEPS     = 90;
 const DAMAGE_SPEED   = 2.0;   // minimum relative speed to deal damage
 const ADVANCE_DELAY  = 3000;  // ms after launch before queuing next bird
 const TOTAL_BIRDS    = 3;
@@ -149,7 +149,7 @@ function mountNextBird() {
     restitution: 0.4,
     friction: 0.5,
     density: 0.004,
-    collisionFilter: { mask: 0 },
+    collisionFilter: { category: 0x0001, mask: 0 },
   });
   World.add(engine.world, activeBird);
   launched = false;
@@ -171,7 +171,7 @@ function launchBird() {
   }
 
   Body.setStatic(activeBird, false);
-  activeBird.collisionFilter = { mask: 0xFFFFFFFF };
+  activeBird.collisionFilter = { category: 0x0001, mask: 0xFFFFFFFF, group: 0 };
   Body.setVelocity(activeBird, { x: vx, y: vy });
 
   launched = true;
@@ -485,9 +485,16 @@ function drawSlingshot() {
 }
 
 function drawTrajectory() {
-  const vx = (SLING_X - dragPos.x) * LAUNCH_SCALE;
-  const vy = (SLING_Y - dragPos.y) * LAUNCH_SCALE;
-  const g  = engine.gravity.y;
+  // Iterative simulation — mirrors Matter.js Verlet integration exactly so the
+  // preview line lands on the same path the launched bird will take.
+  const DELTA = 1000 / 60;
+  const gPerStep = engine.gravity.y * engine.gravity.scale * DELTA * DELTA;
+  const airFriction = 1 - 0.01; // default body.frictionAir
+
+  let vx = (SLING_X - dragPos.x) * LAUNCH_SCALE;
+  let vy = (SLING_Y - dragPos.y) * LAUNCH_SCALE;
+  let px = dragPos.x;
+  let py = dragPos.y;
 
   ctx.save();
   ctx.setLineDash([5, 7]);
@@ -495,11 +502,13 @@ function drawTrajectory() {
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(dragPos.x, dragPos.y);
+  ctx.moveTo(px, py);
 
-  for (let t = 1; t <= TRAJ_STEPS; t++) {
-    const px = dragPos.x + vx * t;
-    const py = dragPos.y + vy * t + 0.5 * g * t * t;
+  for (let t = 0; t < TRAJ_STEPS; t++) {
+    vx = vx * airFriction;
+    vy = vy * airFriction + gPerStep;
+    px += vx;
+    py += vy;
     ctx.lineTo(px, py);
     if (py > canvas.height + 20) break;
   }
