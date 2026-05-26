@@ -4,7 +4,6 @@
       <stop offset="0%" stop-color="#1a2a4a"/>
       <stop offset="100%" stop-color="#0a0a14"/>
     </linearGradient>
-    <!-- Cloud blurs for softness -->
   </defs>
 
   <!-- Sky -->
@@ -22,64 +21,72 @@
   <rect x="0" y="158" width="320" height="22" fill="#7a4a1a"/>
 
   <!-- === STRUCTURE (right side) === -->
-  <!-- Left pillar -->
   <rect x="208" y="108" width="18" height="40" rx="2" fill="#c8902a" stroke="#6b4a10" stroke-width="1.5"/>
-  <!-- Right pillar -->
   <rect x="248" y="108" width="18" height="40" rx="2" fill="#c8902a" stroke="#6b4a10" stroke-width="1.5"/>
-  <!-- Horizontal beam on top of pillars -->
   <rect x="204" y="100" width="70" height="14" rx="2" fill="#d4a040" stroke="#6b4a10" stroke-width="1.5"/>
-  <!-- Top small box on beam -->
   <rect x="222" y="78" width="32" height="26" rx="2" fill="#c8902a" stroke="#6b4a10" stroke-width="1.5"/>
 
-  <!-- === PIG (on top of small box) === -->
+  <!-- === PIG === -->
   <circle cx="238" cy="70" r="14" fill="#4aaa28" stroke="#2a7a10" stroke-width="2"/>
-  <!-- Snout -->
   <ellipse cx="238" cy="74" rx="7" ry="5" fill="#3a8a20" stroke="#2a7a10" stroke-width="1"/>
-  <!-- Nostrils -->
   <circle cx="235" cy="75" r="2" fill="#2a6a10"/>
   <circle cx="241" cy="75" r="2" fill="#2a6a10"/>
-  <!-- Eyes -->
   <circle cx="233" cy="67" r="4" fill="white"/>
   <circle cx="243" cy="67" r="4" fill="white"/>
   <circle cx="234" cy="67" r="2" fill="#1a1a1a"/>
   <circle cx="244" cy="67" r="2" fill="#1a1a1a"/>
-  <!-- Angry eyebrows -->
   <line x1="230" y1="63" x2="237" y2="65" stroke="#2a7a10" stroke-width="2" stroke-linecap="round"/>
   <line x1="246" y1="65" x2="239" y2="63" stroke="#2a7a10" stroke-width="2" stroke-linecap="round"/>
 
   <!-- === SLINGSHOT === -->
-  <!-- Main trunk -->
   <rect x="72" y="100" width="8" height="50" rx="3" fill="#7a4a18"/>
-  <!-- Left fork -->
   <line x1="76" y1="105" x2="62" y2="88" stroke="#7a4a18" stroke-width="6" stroke-linecap="round"/>
-  <!-- Right fork -->
   <line x1="76" y1="105" x2="90" y2="88" stroke="#7a4a18" stroke-width="6" stroke-linecap="round"/>
 
-  <!-- === ACTIVE BIRD (on slingshot) === -->
+  <!-- === ACTIVE POOP (on slingshot) === -->
   <!-- Elastic bands -->
   <line x1="62" y1="88" x2="76" y2="106" stroke="#d4a040" stroke-width="2" opacity="0.8"/>
   <line x1="90" y1="88" x2="76" y2="106" stroke="#d4a040" stroke-width="2" opacity="0.8"/>
-  <!-- Bird body -->
-  <circle cx="76" cy="106" r="13" fill="#cc2222" stroke="#8a1010" stroke-width="1.5"/>
-  <!-- Highlight -->
-  <circle cx="71" cy="101" r="4" fill="#ff5555" opacity="0.6"/>
-  <!-- Beak -->
-  <polygon points="83,108 89,106 83,112" fill="#e8a020" stroke="#c07010" stroke-width="1"/>
-  <!-- Eyes -->
-  <circle cx="74" cy="103" r="4" fill="white"/>
-  <circle cx="75" cy="103" r="2.5" fill="#1a1a1a"/>
-  <!-- Angry brow -->
-  <line x1="70" y1="99" x2="78" y2="101" stroke="#8a1010" stroke-width="2" stroke-linecap="round"/>
-  <!-- Tuft on head -->
-  <line x1="76" y1="93" x2="74" y2="86" stroke="#aa1515" stroke-width="3" stroke-linecap="round"/>
-  <line x1="76" y1="93" x2="79" y2="87" stroke="#aa1515" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Poop body: stacked blobs -->
+  <g transform="translate(76, 113)">
+    <ellipse cx="0"   cy="3"    rx="9.5" ry="8"   fill="#8B4513"/>
+    <ellipse cx="0.8" cy="-3.5" rx="7"   ry="6.5" fill="#8B4513"/>
+    <ellipse cx="1.5" cy="-9.5" rx="4.5" ry="4"   fill="#8B4513"/>
+    <ellipse cx="2"   cy="-14"  rx="2.5" ry="2.5" fill="#8B4513"/>
+    <!-- Shine -->
+    <ellipse cx="-4" cy="0" rx="2.5" ry="1.8" fill="rgba(200,130,70,0.5)" transform="rotate(-30,-4,0)"/>
+    <!-- Eyes -->
+    <circle cx="-3"  cy="-3.5" r="2.8" fill="white"/>
+    <circle cx="3.2" cy="-3.5" r="2.8" fill="white"/>
+    <circle cx="-2.4" cy="-3" r="1.4" fill="#111"/>
+    <circle cx="3.8"  cy="-3" r="1.4" fill="#111"/>
+    <!-- Angry brows -->
+    <line x1="-7"  y1="-7.5" x2="-1.5" y2="-5.5" stroke="#4a1f00" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="7.2" y1="-7.5" x2="1.8"  y2="-5.5" stroke="#4a1f00" stroke-width="1.8" stroke-linecap="round"/>
+    <!-- Frown -->
+    <path d="M -3 -0.5 Q 0.5 2.5 4 -0.5" fill="none" stroke="#4a1f00" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
 
-  <!-- === BIRD QUEUE (waiting on ground) === -->
-  <circle cx="34" cy="144" r="9" fill="#cc2222" stroke="#8a1010" stroke-width="1.5"/>
-  <circle cx="34" cy="144" r="3" fill="white" transform="translate(-2,-2)"/>
-  <polygon points="40,145 44,144 40,148" fill="#e8a020"/>
+  <!-- === POOP QUEUE (waiting on ground) === -->
+  <g transform="translate(34, 144)">
+    <ellipse cx="0"   cy="2"   rx="7"   ry="6"   fill="#8B4513"/>
+    <ellipse cx="0.5" cy="-3"  rx="5.2" ry="4.8" fill="#8B4513"/>
+    <ellipse cx="1"   cy="-7"  rx="3.3" ry="3"   fill="#8B4513"/>
+    <ellipse cx="1.3" cy="-10" rx="1.8" ry="1.8" fill="#8B4513"/>
+    <circle cx="-2"  cy="-3" r="1.8" fill="white"/>
+    <circle cx="2.5" cy="-3" r="1.8" fill="white"/>
+    <circle cx="-1.5" cy="-2.6" r="0.9" fill="#111"/>
+    <circle cx="3"    cy="-2.6" r="0.9" fill="#111"/>
+  </g>
 
-  <circle cx="54" cy="144" r="9" fill="#cc2222" stroke="#8a1010" stroke-width="1.5"/>
-  <circle cx="54" cy="144" r="3" fill="white" transform="translate(-2,-2)"/>
-  <polygon points="60,145 64,144 60,148" fill="#e8a020"/>
+  <g transform="translate(54, 144)">
+    <ellipse cx="0"   cy="2"   rx="7"   ry="6"   fill="#8B4513"/>
+    <ellipse cx="0.5" cy="-3"  rx="5.2" ry="4.8" fill="#8B4513"/>
+    <ellipse cx="1"   cy="-7"  rx="3.3" ry="3"   fill="#8B4513"/>
+    <ellipse cx="1.3" cy="-10" rx="1.8" ry="1.8" fill="#8B4513"/>
+    <circle cx="-2"  cy="-3" r="1.8" fill="white"/>
+    <circle cx="2.5" cy="-3" r="1.8" fill="white"/>
+    <circle cx="-1.5" cy="-2.6" r="0.9" fill="#111"/>
+    <circle cx="3"    cy="-2.6" r="0.9" fill="#111"/>
+  </g>
 </svg>
