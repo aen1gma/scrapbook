@@ -140,7 +140,7 @@ function buildScene() {
       density: 0.001,
     });
     World.add(engine.world, b);
-    blocks.push({ body: b, health: 2, dead: false });
+    blocks.push({ body: b, health: 3, dead: false });
   });
 
   // Pigs — count and positions scale with level
