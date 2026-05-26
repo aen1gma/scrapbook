@@ -6,12 +6,12 @@ const BIRD_RADIUS    = 18;
 const PIG_RADIUS     = 20;
 const PIG_HEALTH     = 2;
 const MAX_PULL       = 110;
-const LAUNCH_SCALE   = 0.055;
-const TRAJ_STEPS     = 50;
-const DAMAGE_SPEED   = 3.2;   // minimum relative speed to deal damage
+const LAUNCH_SCALE   = 0.20;
+const TRAJ_STEPS     = 60;
+const DAMAGE_SPEED   = 2.0;   // minimum relative speed to deal damage
 const ADVANCE_DELAY  = 3000;  // ms after launch before queuing next bird
 const TOTAL_BIRDS    = 3;
-const GRAVITY        = 1.5;
+const GRAVITY        = 0.8;
 
 // Slingshot anchor in world coords — set after canvas size is known
 let SLING_X, SLING_Y;
