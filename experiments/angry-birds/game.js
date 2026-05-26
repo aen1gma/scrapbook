@@ -38,8 +38,8 @@ function init() {
   canvas.height = window.innerHeight;
   ctx = canvas.getContext('2d');
 
-  SLING_X = Math.round(canvas.width * 0.22);
-  SLING_Y = Math.round(canvas.height * 0.62);
+  SLING_X = Math.round(canvas.width * 0.18);
+  SLING_Y = Math.round(canvas.height - 40 - 85); // 85px above ground
 
   engine = Engine.create({ gravity: { y: GRAVITY } });
   runner = Runner.create();
@@ -49,6 +49,7 @@ function init() {
   setupInput();
   setupCollisions();
   setupRestartButton();
+  setupOrientationCheck();
 
   requestAnimationFrame(gameLoop);
 }
@@ -69,8 +70,8 @@ function reset() {
   document.getElementById('message-overlay').setAttribute('hidden', '');
   document.getElementById('restart-btn').setAttribute('hidden', '');
 
-  SLING_X = Math.round(canvas.width * 0.22);
-  SLING_Y = Math.round(canvas.height * 0.62);
+  SLING_X = Math.round(canvas.width * 0.18);
+  SLING_Y = Math.round(canvas.height - 40 - 85);
 
   engine = Engine.create({ gravity: { y: GRAVITY } });
   runner = Runner.create();
@@ -93,8 +94,8 @@ function buildScene() {
   });
   World.add(engine.world, ground);
 
-  // Structure center x
-  const cx = Math.round(W * 0.68);
+  // Structure center x — designed for phone landscape (~844px wide)
+  const cx = Math.round(W * 0.72);
 
   // Wooden blocks — two pillar pairs + beams + top box
   const blockDefs = [
@@ -446,7 +447,7 @@ function drawBlocks() {
 
 function drawSlingshot() {
   const forkH = 28;
-  const trunkH = 55;
+  const trunkH = canvas.height - 40 - SLING_Y; // reach the ground
   const forkSpread = 18;
 
   ctx.strokeStyle = '#7a4a18';
@@ -653,6 +654,46 @@ function drawBirdQueue(H) {
     ctx.translate(startX - i * spacing, queueY);
     drawPoop(BIRD_RADIUS * 0.72, false);
     ctx.restore();
+  });
+}
+
+// ── Orientation ───────────────────────────────────────────────────────────────
+
+function checkOrientation() {
+  const portrait = window.innerHeight > window.innerWidth;
+  const overlay  = document.getElementById('rotate-overlay');
+  const wasShowing = !overlay.hidden;
+
+  if (portrait) {
+    overlay.removeAttribute('hidden');
+  } else {
+    overlay.setAttribute('hidden', '');
+    // Recalculate for new dimensions whenever we return to landscape
+    if (wasShowing) {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      reset();
+      updateStatusBar();
+    }
+  }
+}
+
+function setupOrientationCheck() {
+  checkOrientation();
+
+  window.addEventListener('resize', () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    checkOrientation();
+  });
+
+  // orientationchange fires before dimensions update — wait a frame
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      checkOrientation();
+    }, 100);
   });
 }
 
