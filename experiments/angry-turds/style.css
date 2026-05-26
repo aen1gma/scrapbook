@@ -64,8 +64,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-#birds-left { color: #cc4444; }
-#pigs-left  { color: #4aaa28; }
+#level-display { color: #e8a020; font-weight: 700; padding-right: 0.6rem; border-right: 1px solid rgba(255,255,255,0.15); }
+#birds-left    { color: #cc4444; }
+#pigs-left     { color: #4aaa28; }
 
 #message-overlay {
   position: fixed;
