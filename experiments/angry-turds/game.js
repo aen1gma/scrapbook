@@ -13,6 +13,7 @@ const DAMAGE_SPEED     = 2.0;
 const ADVANCE_DELAY    = 3000;
 const MAX_LEVEL        = 10;
 const GRAVITY          = 0.8;
+const SPICY_RADIUS     = 90;
 
 // Slingshot anchor in world coords — set after canvas size is known
 let SLING_X, SLING_Y;
@@ -33,6 +34,14 @@ let advanceTimer = null;
 let currentLevel  = 1;
 let leftoverTurds = 0;  // carried forward from previous level win
 let restartAction = null;
+
+let chili            = null;
+let chiliCollected   = false;
+let nextBirdSpicy    = false;
+let activeBirdSpicy  = false;
+let spicyExploded    = false;
+let spicyExplosion   = null;  // { x, y, t } for radial animation
+let spicySettleFrames = 0;
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
@@ -71,6 +80,13 @@ function reset() {
   isDragging = false;
   launched   = false;
   gameOver   = false;
+  chili            = null;
+  chiliCollected   = false;
+  nextBirdSpicy    = false;
+  activeBirdSpicy  = false;
+  spicyExploded    = false;
+  spicyExplosion   = null;
+  spicySettleFrames = 0;
 
   document.getElementById('message-overlay').setAttribute('hidden', '');
 
@@ -147,6 +163,13 @@ function buildScene() {
     blocks.push({ body: b, health: 3, dead: false });
   });
 
+  // Chili power-up — sensor in the center of the tower
+  chili = Bodies.circle(cx, groundY - 82, 10, {
+    isStatic: true, isSensor: true, label: 'chili',
+  });
+  World.add(engine.world, chili);
+  chiliCollected = false;
+
   // Pigs — count and positions scale with level
   const pigCount  = currentLevel + 1;
   const birdCount = leftoverTurds + 3;
@@ -172,6 +195,11 @@ function buildScene() {
 
 function mountNextBird() {
   if (birdQueue.length === 0) return;
+
+  activeBirdSpicy  = nextBirdSpicy;
+  nextBirdSpicy    = false;
+  spicyExploded    = false;
+  spicySettleFrames = 0;
 
   activeBird = Bodies.circle(SLING_X, SLING_Y - 20, BIRD_RADIUS, {
     isStatic: true,
@@ -219,6 +247,9 @@ function advanceQueue() {
   if (gameOver) return;
 
   if (activeBird) {
+    if (activeBirdSpicy && !spicyExploded) {
+      triggerSpicyExplosion(activeBird.position.x, activeBird.position.y);
+    }
     World.remove(engine.world, activeBird);
     activeBird = null;
   }
@@ -299,6 +330,18 @@ function setupCollisions() {
     event.pairs.forEach(pair => {
       const { bodyA, bodyB } = pair;
 
+      // Chili pickup — no speed threshold needed
+      if (!chiliCollected && chili) {
+        if ((bodyA.label === 'bird' && bodyB.label === 'chili') ||
+            (bodyA.label === 'chili' && bodyB.label === 'bird')) {
+          chiliCollected = true;
+          World.remove(engine.world, chili);
+          chili = null;
+          nextBirdSpicy = true;
+          return;
+        }
+      }
+
       const rvx = bodyA.velocity.x - bodyB.velocity.x;
       const rvy = bodyA.velocity.y - bodyB.velocity.y;
       const speed = Math.hypot(rvx, rvy);
@@ -345,6 +388,26 @@ function checkWinLose() {
     return true;
   }
   return false;
+}
+
+function triggerSpicyExplosion(x, y) {
+  if (spicyExploded) return;
+  spicyExploded  = true;
+  spicyExplosion = { x, y, t: 0 };
+
+  pigs.forEach(pig => {
+    if (pig.dead) return;
+    const dx = pig.body.position.x - x;
+    const dy = pig.body.position.y - y;
+    if (Math.hypot(dx, dy) <= SPICY_RADIUS + PIG_RADIUS) {
+      pig.health -= 1;
+      if (pig.health <= 0) {
+        pig.dead = true;
+        World.remove(engine.world, pig.body);
+      }
+    }
+  });
+  checkWinLose();
 }
 
 function triggerWin() {
@@ -400,11 +463,26 @@ function gameLoop() {
 
   ctx.clearRect(0, 0, W, H);
 
+  // Spicy bird stationarity — trigger explosion once it settles
+  if (activeBird && activeBirdSpicy && launched && !spicyExploded) {
+    const speed = Math.hypot(activeBird.velocity.x, activeBird.velocity.y);
+    if (speed < 0.8) {
+      spicySettleFrames++;
+      if (spicySettleFrames >= 20) {
+        triggerSpicyExplosion(activeBird.position.x, activeBird.position.y);
+      }
+    } else {
+      spicySettleFrames = 0;
+    }
+  }
+
   drawBackground(W, H);
   drawGround(W, H);
   drawBlocks();
   drawSlingshot();
   if (isDragging && activeBird) drawTrajectory();
+  drawChili();
+  drawSpicyExplosion();
   drawPigs();
   drawActiveBird();
   drawBirdQueue(H);
@@ -681,6 +759,16 @@ function drawActiveBird() {
   const { x, y } = activeBird.position;
   ctx.save();
   ctx.translate(x, y);
+  if (activeBirdSpicy) {
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 120);
+    const glow = ctx.createRadialGradient(0, 0, BIRD_RADIUS * 0.4, 0, 0, BIRD_RADIUS * 2.4);
+    glow.addColorStop(0,   `rgba(255, 80,  0, ${0.65 * pulse})`);
+    glow.addColorStop(1,   'rgba(255, 0, 0, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, BIRD_RADIUS * 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.rotate(activeBird.angle);
   drawPoop(BIRD_RADIUS, true);
   ctx.restore();
@@ -700,6 +788,71 @@ function drawBirdQueue(H) {
     drawPoop(BIRD_RADIUS * 0.72, false);
     ctx.restore();
   });
+}
+
+function drawChili() {
+  if (!chili) return;
+  const { x, y } = chili.position;
+  const bob = Math.sin(Date.now() / 400) * 3;
+  ctx.save();
+  ctx.translate(x, y + bob);
+
+  // Body
+  ctx.fillStyle = '#dd2200';
+  ctx.beginPath();
+  ctx.ellipse(0, 3, 6, 10, 0.25, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tip
+  ctx.beginPath();
+  ctx.ellipse(6, 9, 3, 5, 1.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shine
+  ctx.fillStyle = 'rgba(255,150,100,0.45)';
+  ctx.beginPath();
+  ctx.ellipse(-2, 0, 2, 4, 0.25, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Stem
+  ctx.strokeStyle = '#228822';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(0, -7);
+  ctx.quadraticCurveTo(-5, -13, -2, -17);
+  ctx.stroke();
+
+  // Leaf
+  ctx.fillStyle = '#228822';
+  ctx.beginPath();
+  ctx.ellipse(-3, -12, 5, 2.5, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawSpicyExplosion() {
+  if (!spicyExplosion) return;
+  const { x, y, t } = spicyExplosion;
+  const FRAMES   = 40;
+  const progress = t / FRAMES;
+  const radius   = SPICY_RADIUS * (0.2 + progress * 0.8);
+  const alpha    = (1 - progress) * 0.75;
+
+  ctx.save();
+  const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+  grad.addColorStop(0,   `rgba(255, 220, 60,  ${alpha})`);
+  grad.addColorStop(0.4, `rgba(255, 80,  0,   ${alpha * 0.8})`);
+  grad.addColorStop(1,   'rgba(255, 0, 0, 0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  spicyExplosion.t++;
+  if (spicyExplosion.t >= FRAMES) spicyExplosion = null;
 }
 
 // ── Orientation ───────────────────────────────────────────────────────────────
