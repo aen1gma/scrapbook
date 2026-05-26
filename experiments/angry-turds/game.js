@@ -468,10 +468,10 @@ function gameLoop() {
   drawSlingshot();
   if (isDragging && activeBird) drawTrajectory();
   drawChili();
-  drawSpicyExplosion();
   drawPigs();
   drawActiveBird();
   drawBirdQueue(H);
+  drawSpicyExplosion();
 
   requestAnimationFrame(gameLoop);
 }
@@ -821,20 +821,53 @@ function drawChili() {
 function drawSpicyExplosion() {
   if (!spicyExplosion) return;
   const { x, y, t } = spicyExplosion;
-  const FRAMES   = 40;
+  const FRAMES   = 60;
   const progress = t / FRAMES;
-  const radius   = SPICY_RADIUS * (0.2 + progress * 0.8);
-  const alpha    = (1 - progress) * 0.75;
 
   ctx.save();
-  const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
-  grad.addColorStop(0,   `rgba(255, 220, 60,  ${alpha})`);
-  grad.addColorStop(0.4, `rgba(255, 80,  0,   ${alpha * 0.8})`);
-  grad.addColorStop(1,   'rgba(255, 0, 0, 0)');
-  ctx.fillStyle = grad;
+
+  // White flash at the very start
+  if (t < 6) {
+    const flashA = (1 - t / 6) * 0.85;
+    ctx.fillStyle = `rgba(255,255,240,${flashA})`;
+    ctx.beginPath();
+    ctx.arc(x, y, SPICY_RADIUS * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Main fireball
+  const fireR = SPICY_RADIUS * 1.6 * (0.12 + progress * 0.88);
+  const fireA = Math.max(0, 1 - progress * 1.15) * 0.9;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, fireR);
+  g.addColorStop(0,    `rgba(255,255,200,${fireA})`);
+  g.addColorStop(0.2,  `rgba(255,180, 30,${fireA})`);
+  g.addColorStop(0.55, `rgba(255, 50,  0,${fireA * 0.75})`);
+  g.addColorStop(1,    'rgba(160,0,0,0)');
+  ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.arc(x, y, fireR, 0, Math.PI * 2);
   ctx.fill();
+
+  // Three staggered shockwave rings
+  [0, 0.18, 0.36].forEach(delay => {
+    const rp = Math.min(1, (progress - delay) / 0.65);
+    if (rp <= 0) return;
+    const rr = SPICY_RADIUS * 2.2 * rp;
+    const ra = (1 - rp) * 0.85;
+    ctx.strokeStyle = `rgba(255,140,0,${ra})`;
+    ctx.lineWidth   = Math.max(1, 5 * (1 - rp));
+    ctx.beginPath();
+    ctx.arc(x, y, rr, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  // Screen-wide orange tint during first 10 frames
+  if (t < 10) {
+    const tintA = (1 - t / 10) * 0.18;
+    ctx.fillStyle = `rgba(255,80,0,${tintA})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
   ctx.restore();
 
   spicyExplosion.t++;
