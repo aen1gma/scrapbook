@@ -315,7 +315,7 @@ function setupCollisions() {
           }
         }
 
-        if (target.label === 'block') {
+        if (target.label === 'block' && other.label === 'bird') {
           const block = blocks.find(b => b.body === target);
           if (!block || block.dead) return;
           block.health -= 1;
