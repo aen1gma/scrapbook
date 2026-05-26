@@ -175,6 +175,7 @@ function launchBird() {
   Body.setStatic(activeBird, false);
   activeBird.collisionFilter = { category: 0x0001, mask: 0xFFFFFFFF, group: 0 };
   Body.setVelocity(activeBird, { x: vx, y: vy });
+  Body.setAngularVelocity(activeBird, 0.2);
 
   launched = true;
   isDragging = false;
@@ -634,6 +635,7 @@ function drawActiveBird() {
   const { x, y } = activeBird.position;
   ctx.save();
   ctx.translate(x, y);
+  ctx.rotate(activeBird.angle);
   drawPoop(BIRD_RADIUS, true);
   ctx.restore();
 }
