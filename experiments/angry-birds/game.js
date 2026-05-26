@@ -68,7 +68,6 @@ function reset() {
   gameOver   = false;
 
   document.getElementById('message-overlay').setAttribute('hidden', '');
-  document.getElementById('restart-btn').setAttribute('hidden', '');
 
   SLING_X = Math.round(canvas.width * 0.18);
   SLING_Y = Math.round(canvas.height - 40 - 85);
@@ -330,7 +329,6 @@ function showMessage(title, sub) {
   document.getElementById('message-text').textContent = title;
   document.getElementById('message-sub').textContent = sub;
   document.getElementById('message-overlay').removeAttribute('hidden');
-  document.getElementById('restart-btn').removeAttribute('hidden');
 }
 
 // ── UI ────────────────────────────────────────────────────────────────────────
