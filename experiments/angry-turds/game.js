@@ -3,15 +3,15 @@ const { Engine, Runner, Bodies, Body, World, Events, Composite } = Matter;
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const BIRD_RADIUS      = 18;
-const BIRD_FRICTION_AIR = 0.002; // low air drag keeps speed through the flight
+const BIRD_FRICTION_AIR = 0.002;
 const PIG_RADIUS       = 20;
 const PIG_HEALTH       = 2;
 const MAX_PULL         = 110;
 const LAUNCH_SCALE     = 0.18;
 const TRAJ_STEPS       = 90;
-const DAMAGE_SPEED     = 2.0;   // minimum relative speed to deal damage
-const ADVANCE_DELAY    = 3000;  // ms after launch before queuing next bird
-const TOTAL_BIRDS      = 3;
+const DAMAGE_SPEED     = 2.0;
+const ADVANCE_DELAY    = 3000;
+const MAX_LEVEL        = 10;
 const GRAVITY          = 0.8;
 
 // Slingshot anchor in world coords — set after canvas size is known
@@ -21,14 +21,16 @@ let SLING_X, SLING_Y;
 
 let engine, runner, canvas, ctx;
 
-let birdQueue   = [];   // remaining configs: [{ type }]
-let pigs        = [];   // [{ body, health, dead }]
-let activeBird  = null; // Matter body currently on sling
-let isDragging  = false;
-let dragPos     = { x: 0, y: 0 };
-let launched    = false;
-let gameOver    = false;
+let birdQueue    = [];
+let pigs         = [];
+let activeBird   = null;
+let isDragging   = false;
+let dragPos      = { x: 0, y: 0 };
+let launched     = false;
+let gameOver     = false;
 let advanceTimer = null;
+let currentLevel = 1;
+let restartAction = null;
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
@@ -82,6 +84,27 @@ function reset() {
 
 // ── Scene construction ────────────────────────────────────────────────────────
 
+// Returns up to 11 pig spawn positions fanning out from the structure.
+// Positions are proportional to W so they stay on-screen across device sizes.
+function getPigPositions(W, groundY, cx, count) {
+  const r = PIG_RADIUS;
+  const s = Math.round(W * 0.065); // ~55 px on an 844-wide phone
+  const all = [
+    { x: cx,          y: groundY - 111 - r },  // upper beam
+    { x: cx + s,      y: groundY - r },         // ground right
+    { x: cx - s,      y: groundY - r },         // ground left
+    { x: cx + 2 * s,  y: groundY - r },         // ground far right
+    { x: cx,          y: groundY - 67 - r },    // lower beam centre
+    { x: cx - 2 * s,  y: groundY - r },         // ground far left
+    { x: cx + 40,     y: groundY - 67 - r },    // lower beam right
+    { x: cx + 3 * s,  y: groundY - r },         // ground further right
+    { x: cx - 40,     y: groundY - 67 - r },    // lower beam left
+    { x: cx - 3 * s,  y: groundY - r },         // ground further left
+    { x: cx + 4 * s,  y: groundY - r },         // ground extreme right
+  ];
+  return all.slice(0, count);
+}
+
 function buildScene() {
   const W = canvas.width;
   const H = canvas.height;
@@ -116,13 +139,11 @@ function buildScene() {
     World.add(engine.world, b);
   });
 
-  // Pigs
-  const pigDefs = [
-    { x: cx,      y: groundY - 118 - PIG_RADIUS },  // top of structure
-    { x: cx + 80, y: groundY - PIG_RADIUS },         // beside structure
-  ];
+  // Pigs — count and positions scale with level
+  const pigCount  = currentLevel + 1;
+  const birdCount = currentLevel + 2;
 
-  pigs = pigDefs.map(({ x, y }) => {
+  pigs = getPigPositions(W, groundY, cx, pigCount).map(({ x, y }) => {
     const body = Bodies.circle(x, y, PIG_RADIUS, {
       label: 'pig',
       restitution: 0.3,
@@ -134,7 +155,7 @@ function buildScene() {
   });
 
   // Bird queue
-  birdQueue = Array.from({ length: TOTAL_BIRDS }, () => ({ type: 'red' }));
+  birdQueue = Array.from({ length: birdCount }, () => ({ type: 'red' }));
   mountNextBird();
   updateStatusBar();
 }
@@ -316,13 +337,24 @@ function checkWinLose() {
 function triggerWin() {
   gameOver = true;
   Runner.stop(runner);
-  showMessage('YOU WIN!', 'all pigs eliminated');
+  const btn = document.getElementById('restart-btn');
+  if (currentLevel < MAX_LEVEL) {
+    btn.textContent = 'Next Level →';
+    restartAction = () => { currentLevel++; reset(); updateStatusBar(); };
+    showMessage(`Level ${currentLevel}`, 'cleared!');
+  } else {
+    btn.textContent = 'Play Again';
+    restartAction = () => { currentLevel = 1; reset(); updateStatusBar(); };
+    showMessage('All Done!', 'every level cleared');
+  }
 }
 
 function triggerLose() {
   gameOver = true;
   Runner.stop(runner);
-  showMessage('GAME OVER', 'out of birds');
+  document.getElementById('restart-btn').textContent = 'Try Again';
+  restartAction = () => { reset(); updateStatusBar(); };
+  showMessage('Game Over', 'out of turds');
 }
 
 function showMessage(title, sub) {
@@ -334,14 +366,14 @@ function showMessage(title, sub) {
 // ── UI ────────────────────────────────────────────────────────────────────────
 
 function updateStatusBar() {
-  document.getElementById('birds-left').textContent = `Turds: ${birdQueue.length}`;
-  document.getElementById('pigs-left').textContent  = `Pigs: ${pigs.filter(p => !p.dead).length}`;
+  document.getElementById('level-display').textContent = `Level ${currentLevel}`;
+  document.getElementById('birds-left').textContent    = `Turds: ${birdQueue.length}`;
+  document.getElementById('pigs-left').textContent     = `Pigs: ${pigs.filter(p => !p.dead).length}`;
 }
 
 function setupRestartButton() {
   document.getElementById('restart-btn').addEventListener('click', () => {
-    reset();
-    updateStatusBar();
+    if (restartAction) restartAction();
   });
 }
 
