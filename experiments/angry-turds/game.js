@@ -22,6 +22,7 @@ let SLING_X, SLING_Y;
 let engine, runner, canvas, ctx;
 
 let birdQueue    = [];
+let blocks       = [];
 let pigs         = [];
 let activeBird   = null;
 let isDragging   = false;
@@ -64,6 +65,7 @@ function reset() {
   Engine.clear(engine);
 
   birdQueue  = [];
+  blocks     = [];
   pigs       = [];
   activeBird = null;
   isDragging = false;
@@ -138,6 +140,7 @@ function buildScene() {
       density: 0.001,
     });
     World.add(engine.world, b);
+    blocks.push({ body: b, health: 3, dead: false });
   });
 
   // Pigs — count and positions scale with level
@@ -292,31 +295,36 @@ function setupCollisions() {
     event.pairs.forEach(pair => {
       const { bodyA, bodyB } = pair;
 
-      let pigBody = null;
-      if (bodyA.label === 'pig') pigBody = bodyA;
-      else if (bodyB.label === 'pig') pigBody = bodyB;
-      if (!pigBody) return;
-
-      const other = pigBody === bodyA ? bodyB : bodyA;
-
-      // Relative velocity magnitude at point of impact
       const rvx = bodyA.velocity.x - bodyB.velocity.x;
       const rvy = bodyA.velocity.y - bodyB.velocity.y;
       const speed = Math.hypot(rvx, rvy);
       if (speed < DAMAGE_SPEED) return;
 
-      // Only birds and falling blocks deal damage
-      if (other.label !== 'bird' && other.label !== 'block' && other.label !== 'pig') return;
+      [bodyA, bodyB].forEach(target => {
+        const other = target === bodyA ? bodyB : bodyA;
+        if (other.label !== 'bird' && other.label !== 'block' && other.label !== 'pig') return;
 
-      const pig = pigs.find(p => p.body === pigBody);
-      if (!pig || pig.dead) return;
+        if (target.label === 'pig') {
+          const pig = pigs.find(p => p.body === target);
+          if (!pig || pig.dead) return;
+          pig.health -= 1;
+          if (pig.health <= 0) {
+            pig.dead = true;
+            World.remove(engine.world, pig.body);
+            checkWinLose();
+          }
+        }
 
-      pig.health -= 1;
-      if (pig.health <= 0) {
-        pig.dead = true;
-        World.remove(engine.world, pig.body);
-        checkWinLose();
-      }
+        if (target.label === 'block' && other.label === 'bird') {
+          const block = blocks.find(b => b.body === target);
+          if (!block || block.dead) return;
+          block.health -= 1;
+          if (block.health <= 0) {
+            block.dead = true;
+            World.remove(engine.world, block.body);
+          }
+        }
+      });
     });
   });
 }
@@ -355,9 +363,8 @@ function triggerWin() {
 function triggerLose() {
   gameOver = true;
   Runner.stop(runner);
-  leftoverTurds = 0;
-  document.getElementById('restart-btn').textContent = 'Try Again';
-  restartAction = () => { reset(); updateStatusBar(); };
+  document.getElementById('restart-btn').textContent = 'Play Again';
+  restartAction = () => { leftoverTurds = 0; currentLevel = 1; reset(); updateStatusBar(); };
   showMessage('Game Over', 'out of turds');
 }
 
