@@ -1,0 +1,115 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0a0a14;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #e8e8f0;
+  user-select: none;
+}
+
+#game-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: block;
+}
+
+#ui-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.back-link,
+#restart-btn {
+  pointer-events: auto;
+}
+
+.back-link {
+  color: #e8a020;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid rgba(232, 160, 32, 0.3);
+  transition: background 0.15s;
+}
+
+.back-link:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+#status-bar {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#birds-left { color: #cc4444; }
+#pigs-left  { color: #4aaa28; }
+
+#restart-btn {
+  background: #e8a020;
+  border: none;
+  color: #0a0a14;
+  font-weight: 700;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+
+#restart-btn:hover {
+  background: #f0b840;
+}
+
+#message-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 20;
+  pointer-events: none;
+}
+
+#message-overlay:not([hidden]) {
+  display: flex;
+}
+
+#message-text {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 900;
+  color: #e8a020;
+  text-shadow: 0 0 40px rgba(232, 160, 32, 0.6), 0 2px 4px rgba(0,0,0,0.8);
+  letter-spacing: -0.02em;
+}
+
+#message-sub {
+  font-size: 1rem;
+  color: rgba(232, 232, 240, 0.6);
+}
