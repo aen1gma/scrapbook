@@ -2,16 +2,17 @@ const { Engine, Runner, Bodies, Body, World, Events, Composite } = Matter;
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const BIRD_RADIUS    = 18;
-const PIG_RADIUS     = 20;
-const PIG_HEALTH     = 2;
-const MAX_PULL       = 110;
-const LAUNCH_SCALE   = 0.18;
-const TRAJ_STEPS     = 90;
-const DAMAGE_SPEED   = 2.0;   // minimum relative speed to deal damage
-const ADVANCE_DELAY  = 3000;  // ms after launch before queuing next bird
-const TOTAL_BIRDS    = 3;
-const GRAVITY        = 0.8;
+const BIRD_RADIUS      = 18;
+const BIRD_FRICTION_AIR = 0.002; // low air drag keeps speed through the flight
+const PIG_RADIUS       = 20;
+const PIG_HEALTH       = 2;
+const MAX_PULL         = 110;
+const LAUNCH_SCALE     = 0.18;
+const TRAJ_STEPS       = 90;
+const DAMAGE_SPEED     = 2.0;   // minimum relative speed to deal damage
+const ADVANCE_DELAY    = 3000;  // ms after launch before queuing next bird
+const TOTAL_BIRDS      = 3;
+const GRAVITY          = 0.8;
 
 // Slingshot anchor in world coords — set after canvas size is known
 let SLING_X, SLING_Y;
@@ -108,9 +109,9 @@ function buildScene() {
   blockDefs.forEach(({ x, y, w, h }) => {
     const b = Bodies.rectangle(x, y, w, h, {
       label: 'block',
-      restitution: 0.15,
-      friction: 0.6,
-      density: 0.004,
+      restitution: 0.1,
+      friction: 0.3,
+      density: 0.001,
     });
     World.add(engine.world, b);
   });
@@ -148,6 +149,7 @@ function mountNextBird() {
     label: 'bird',
     restitution: 0.4,
     friction: 0.5,
+    frictionAir: BIRD_FRICTION_AIR,
     density: 0.004,
     collisionFilter: { category: 0x0001, mask: 0 },
   });
@@ -489,7 +491,7 @@ function drawTrajectory() {
   // preview line lands on the same path the launched bird will take.
   const DELTA = 1000 / 60;
   const gPerStep = engine.gravity.y * engine.gravity.scale * DELTA * DELTA;
-  const airFriction = 1 - 0.01; // default body.frictionAir
+  const airFriction = 1 - BIRD_FRICTION_AIR;
 
   let vx = (SLING_X - dragPos.x) * LAUNCH_SCALE;
   let vy = (SLING_Y - dragPos.y) * LAUNCH_SCALE;
