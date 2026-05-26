@@ -29,7 +29,8 @@ let dragPos      = { x: 0, y: 0 };
 let launched     = false;
 let gameOver     = false;
 let advanceTimer = null;
-let currentLevel = 1;
+let currentLevel  = 1;
+let leftoverTurds = 0;  // carried forward from previous level win
 let restartAction = null;
 
 // ── Init ─────────────────────────────────────────────────────────────────────
@@ -141,7 +142,7 @@ function buildScene() {
 
   // Pigs — count and positions scale with level
   const pigCount  = currentLevel + 1;
-  const birdCount = 3;
+  const birdCount = leftoverTurds + 3;
 
   pigs = getPigPositions(W, groundY, cx, pigCount).map(({ x, y }) => {
     const body = Bodies.circle(x, y, PIG_RADIUS, {
@@ -337,14 +338,17 @@ function checkWinLose() {
 function triggerWin() {
   gameOver = true;
   Runner.stop(runner);
+  // birdQueue still holds any unthrown turds (launched ones have been shifted out)
+  const carryOver = birdQueue.length;
   const btn = document.getElementById('restart-btn');
   if (currentLevel < MAX_LEVEL) {
     btn.textContent = 'Next Level →';
-    restartAction = () => { currentLevel++; reset(); updateStatusBar(); };
-    showMessage(`Level ${currentLevel}`, 'cleared!');
+    restartAction = () => { leftoverTurds = carryOver; currentLevel++; reset(); updateStatusBar(); };
+    const bonus = carryOver > 0 ? ` (+${carryOver} carried over)` : '';
+    showMessage(`Level ${currentLevel}`, `cleared!${bonus}`);
   } else {
     btn.textContent = 'Play Again';
-    restartAction = () => { currentLevel = 1; reset(); updateStatusBar(); };
+    restartAction = () => { leftoverTurds = 0; currentLevel = 1; reset(); updateStatusBar(); };
     showMessage('All Done!', 'every level cleared');
   }
 }
@@ -352,6 +356,7 @@ function triggerWin() {
 function triggerLose() {
   gameOver = true;
   Runner.stop(runner);
+  leftoverTurds = 0;
   document.getElementById('restart-btn').textContent = 'Try Again';
   restartAction = () => { reset(); updateStatusBar(); };
   showMessage('Game Over', 'out of turds');
