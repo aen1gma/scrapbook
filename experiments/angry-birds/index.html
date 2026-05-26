@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Angry Birds — Scrapbook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="ui-overlay">
+    <a class="back-link" href="/">← Scrapbook</a>
+    <div id="status-bar">
+      <span id="birds-left">Birds: 3</span>
+      <span id="pigs-left">Pigs: 2</span>
+    </div>
+    <button id="restart-btn" hidden>Restart</button>
+  </div>
+
+  <div id="message-overlay" hidden>
+    <h2 id="message-text"></h2>
+    <p id="message-sub"></p>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="game.js" type="module"></script>
+</body>
+</html>
