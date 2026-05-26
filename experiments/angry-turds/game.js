@@ -141,7 +141,7 @@ function buildScene() {
 
   // Pigs — count and positions scale with level
   const pigCount  = currentLevel + 1;
-  const birdCount = currentLevel + 2;
+  const birdCount = 3;
 
   pigs = getPigPositions(W, groundY, cx, pigCount).map(({ x, y }) => {
     const body = Bodies.circle(x, y, PIG_RADIUS, {
