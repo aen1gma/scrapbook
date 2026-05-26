@@ -117,7 +117,11 @@ function buildScene() {
   const ground = Bodies.rectangle(W / 2, H - 20, W + 200, 40, {
     isStatic: true, label: 'ground', friction: 0.8, restitution: 0.1,
   });
-  World.add(engine.world, ground);
+  // Right wall (static)
+  const rightWall = Bodies.rectangle(W + 25, H / 2, 50, H + 200, {
+    isStatic: true, label: 'wall', friction: 0.3, restitution: 0.2,
+  });
+  World.add(engine.world, [ground, rightWall]);
 
   // Structure center x — designed for phone landscape (~844px wide)
   const cx = Math.round(W * 0.72);
